@@ -13,7 +13,7 @@ int main() {
 
     std::getline(std::cin, command);
 
-    std::cout << command <<": command not found" << '\n';
+    if ( command != "exit") std::cout << command <<": command not found" << '\n';
   }
 
 }
