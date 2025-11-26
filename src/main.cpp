@@ -13,7 +13,11 @@ int main() {
 
     std::getline(std::cin, command);
 
-    if ( command != "exit") std::cout << command <<": command not found" << '\n';
+    std::string action { command.substr(0,command.find_first_of(' '))};
+    if ( action == "echo" ) {
+      std::cout << command.substr(command.find_first_of(' ') + 1,command.size()) << '\n';
+    }
+    else if ( command != "exit") std::cout << command <<": command not found" << '\n';
   }
 
 }
