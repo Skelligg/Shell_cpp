@@ -3,6 +3,8 @@
 //
 
 #include "shell.h"
+
+#include <filesystem>
 #include <iostream>
 #include <sstream>
 #include <unistd.h>   // fork, execvp
@@ -11,7 +13,7 @@
 shell::shell() {
     builtInCommands["echo"] = [this](const std::string& cmd){ echoCommand(cmd); };
     builtInCommands["type"] = [this](const std::string& cmd){ typeCommand(cmd); };
-    builtInCommands["pwd"] = [this](const std::string& cmd){ pwdCommand(cmd); };
+    builtInCommands["pwd"] = [this](const std::string& cmd){ pwdCommand(); };
     builtInCommands["exit"] = [this](const std::string& cmd){};
 }
 
@@ -73,11 +75,13 @@ void shell::typeCommand(const std::string& cmd) {
     }
 }
 
-void shell::pwdCommand(const std::string& cmd) {
-    char buffer[PATH_MAX];
-    if (getcwd(buffer, sizeof(buffer))) {
-        std::cout << buffer << '\n';
-    }
+void shell::pwdCommand() {
+    std::cout << std::filesystem::current_path().string() << '\n';
+    // Below is initial solution using PATH_MAX which is not defined on all systems so failed on codecrafters alpine linux sandbox
+    // char buffer[PATH_MAX];
+    // if (getcwd(buffer, sizeof(buffer))) {
+    //     std::cout << buffer << '\n';
+    // }
 }
 
 
