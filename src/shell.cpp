@@ -5,14 +5,14 @@
 #include "shell.h"
 #include <iostream>
 #include <sstream>
-#include <unistd.h>
 #include <unistd.h>   // fork, execvp
 #include <sys/wait.h> // waitpid
 
 shell::shell() {
     builtInCommands["echo"] = [this](const std::string& cmd){ echoCommand(cmd); };
     builtInCommands["type"] = [this](const std::string& cmd){ typeCommand(cmd); };
-    builtInCommands["exit"] = [this](const std::string& cmd){ exitCommand(cmd); };
+    builtInCommands["pwd"] = [this](const std::string& cmd){ pwdCommand(cmd); };
+    builtInCommands["exit"] = [this](const std::string& cmd){};
 }
 
 void shell::run() {
@@ -73,6 +73,14 @@ void shell::typeCommand(const std::string& cmd) {
     }
 }
 
+void shell::pwdCommand(const std::string& cmd) {
+    char buffer[PATH_MAX];
+    if (getcwd(buffer, sizeof(buffer))) {
+        std::cout << buffer << '\n';
+    }
+}
+
+
 bool shell::exitCommand(const std::string& cmd) {
     return cmd == "exit";
 }
@@ -90,8 +98,7 @@ bool shell::exitCommand(const std::string& cmd) {
 
 void shell::runExternalCommand(const std::string& cmd) {
     std::vector args { split(cmd, ' ')};
-    std::string action { args[0]};
-    std::string cmdFound {findExternalCommand(action)};
+    std::string cmdFound {findExternalCommand(args[0])};
     if (!cmdFound.empty()) {
         pid_t pid = fork();
         if (pid == 0) {

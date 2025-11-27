@@ -20,6 +20,7 @@ private:
 
     void echoCommand(const std::string&);
     void typeCommand(const std::string&);
+    void pwdCommand(const std::string&);
     bool exitCommand(const std::string&);
 
     void runExternalCommand(const std::string&);
