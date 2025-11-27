@@ -91,6 +91,7 @@ void shell::cdCommand(const std::string& cmd) {
         return;
     }
     std::string dir { cmd.substr(pos + 1,cmd.size())};
+    if (dir == "~") dir = getenv("HOME");
     if (chdir(dir.c_str())) {
         std::cout << "cd: " << dir << ": No such file or directory" << '\n';
     }
