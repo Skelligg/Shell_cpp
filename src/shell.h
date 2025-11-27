@@ -20,11 +20,13 @@ private:
 
     void echoCommand(const std::string&);
     void typeCommand(const std::string&);
+    bool exitCommand(const std::string&);
 
+    void runExternalCommand(const std::string&);
     void printError(const std::string&);
 
+    std::string findExternalCommand(const std::string& cmd);
     std::vector<std::string> split(const std::string& str, char delimiter);
-    bool exitCommand(const std::string&);
 };
 
 
