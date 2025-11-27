@@ -23,6 +23,7 @@ private:
 
     void printError(const std::string&);
 
+    std::vector<std::string> split(const std::string& str, char delimiter);
     bool exitCommand(const std::string&);
 };
 
