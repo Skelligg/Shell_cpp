@@ -13,6 +13,7 @@
 shell::shell() {
     builtInCommands["echo"] = [this](const std::string& cmd){ echoCommand(cmd); };
     builtInCommands["type"] = [this](const std::string& cmd){ typeCommand(cmd); };
+    builtInCommands["cd"] = [this](const std::string& cmd){ cdCommand(cmd); };
     builtInCommands["pwd"] = [this](const std::string& cmd){ pwdCommand(); };
     builtInCommands["exit"] = [this](const std::string& cmd){};
 }
@@ -82,6 +83,17 @@ void shell::pwdCommand() {
     // if (getcwd(buffer, sizeof(buffer))) {
     //     std::cout << buffer << '\n';
     // }
+}
+
+void shell::cdCommand(const std::string& cmd) {
+    size_t pos = cmd.find_first_of(' ');
+    if (pos == std::string::npos) {
+        return;
+    }
+    std::string dir { cmd.substr(pos + 1,cmd.size())};
+    if (chdir(dir.c_str())) {
+        std::cout << "cd: " << dir << ": No such file or directory" << '\n';
+    }
 }
 
 

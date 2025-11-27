@@ -21,6 +21,7 @@ private:
     void echoCommand(const std::string&);
     void typeCommand(const std::string&);
     void pwdCommand();
+    void cdCommand(const std::string&);
     bool exitCommand(const std::string&);
 
     void runExternalCommand(const std::string&);
