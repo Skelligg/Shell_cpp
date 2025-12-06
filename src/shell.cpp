@@ -60,7 +60,13 @@ int shell::echoCommand(const std::string& cmd) {
         std::cout << '\n';
         return 0;
     }
-    std::cout << cmd.substr(pos + 1) << '\n';
+
+    std::string output {cmd.substr(pos + 1)};
+    if (output.front() == '"' && output.back() == '"' || output.front() == '\'' && output.back() == '\'') {
+        output = output.substr(1,output.size()-2);
+    }
+
+    std::cout << output << '\n';
     return 0;
 }
 
