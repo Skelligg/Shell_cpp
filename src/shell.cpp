@@ -149,7 +149,11 @@ void shell::outputRedirect(std::string& cmd) {
             dup2(fd, STDOUT_FILENO);
             close(fd);
         }
-        cmd = cmd.substr(0, pos);
+        if (cmd[pos-1] == '1') {
+            cmd = cmd.substr(0, pos-1);
+        } else {
+            cmd = cmd.substr(0, pos);
+        }
 
         while (!cmd.empty() && std::isspace(cmd.back())) {
             cmd.pop_back();
