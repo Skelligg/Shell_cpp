@@ -142,7 +142,7 @@ void shell::outputRedirect(std::string& cmd) {
     filename = filename.substr(start, end - start + 1);
 
     if (pos) {
-        if ( cmd[pos-1] != '1' && cmd[pos-1] != '&') {
+        if ( cmd[pos-1] != '2' && cmd[pos-1] != '&') {
             int fd = open(filename.c_str(),
               O_WRONLY | O_CREAT | O_TRUNC,
               0644);
