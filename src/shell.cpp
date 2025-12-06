@@ -140,7 +140,13 @@ void shell::outputRedirect(std::string& cmd) {
 
     savedStdOut = dup(STDOUT_FILENO);
 
-    std::string filename = cmd.substr(pos+1);
+    std::string filename{};
+    if (cmd[pos+1] == '>') {
+        filename = cmd.substr(pos+2);
+    }
+    else {
+        filename = cmd.substr(pos+1);
+    }
 
     auto start = filename.find_first_not_of(" \t");
     auto end   = filename.find_last_not_of(" \t");
@@ -148,11 +154,21 @@ void shell::outputRedirect(std::string& cmd) {
 
     if (pos) {
         if ( cmd[pos-1] != '2' && cmd[pos-1] != '&') {
-            int fd = open(filename.c_str(),
-              O_WRONLY | O_CREAT | O_TRUNC,
-              0644);
-            dup2(fd, STDOUT_FILENO);
-            close(fd);
+            if (cmd[pos+1] == '>') {
+                int fd = open(filename.c_str(),
+                    O_WRONLY | O_CREAT | O_APPEND,
+                    0644);
+                dup2(fd, STDOUT_FILENO);
+                close(fd);
+            }
+            else {
+                int fd = open(filename.c_str(),
+                    O_WRONLY | O_CREAT | O_TRUNC,
+                    0644);
+                dup2(fd, STDOUT_FILENO);
+                close(fd);
+            }
+
         }
         else if ( cmd[pos-1] == '2') {
             int fd = open(filename.c_str(),
