@@ -171,11 +171,21 @@ void shell::outputRedirect(std::string& cmd) {
 
         }
         else if ( cmd[pos-1] == '2') {
-            int fd = open(filename.c_str(),
-              O_WRONLY | O_CREAT | O_TRUNC,
-              0644);
-            dup2(fd, STDERR_FILENO);
-            close(fd);
+            if (cmd[pos+1] == '>') {
+                int fd = open(filename.c_str(),
+                    O_WRONLY | O_CREAT | O_APPEND,
+                    0644);
+                dup2(fd, STDERR_FILENO);
+                close(fd);
+            }
+            else {
+                int fd = open(filename.c_str(),
+                    O_WRONLY | O_CREAT | O_TRUNC,
+                0644);
+                dup2(fd, STDERR_FILENO);
+                close(fd);
+            }
+
         }
         if (cmd[pos-1] == '1' || cmd[pos-1] == '2') {
             cmd = cmd.substr(0, pos-1);
