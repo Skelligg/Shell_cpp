@@ -25,8 +25,6 @@ void shell::run() {
     std::string cmd;
 
     while (true) {
-        std::cout << std::unitbuf;
-        std::cerr << std::unitbuf;
 
         std::cout << "$ ";
 
@@ -46,7 +44,8 @@ void shell::run() {
             if (!cmd.empty()) runExternalCommand(cmd);
         }
         restoreOutput();
-
+        std::cout << std::flush;
+        std::cerr << std::flush;
     }
 }
 
@@ -155,7 +154,14 @@ void shell::outputRedirect(std::string& cmd) {
             dup2(fd, STDOUT_FILENO);
             close(fd);
         }
-        if (cmd[pos-1] == '1') {
+        else if ( cmd[pos-1] == '2') {
+            int fd = open(filename.c_str(),
+              O_WRONLY | O_CREAT | O_TRUNC,
+              0644);
+            dup2(fd, STDERR_FILENO);
+            close(fd);
+        }
+        if (cmd[pos-1] == '1' || cmd[pos-1] == '2') {
             cmd = cmd.substr(0, pos-1);
         } else {
             cmd = cmd.substr(0, pos);
@@ -187,17 +193,18 @@ void shell::runExternalCommand(const std::string& cmd) {
                 argv.push_back(const_cast<char*>(a.c_str()));
             }
             argv.push_back(nullptr);
+
+            dup2(STDOUT_FILENO, STDERR_FILENO);
             execvp(cmdFound.c_str(), argv.data());
 
             // If we reach here, exec failed:
             perror("execvp");
-            _exit(1);
+            exit(1);
         }
-        else {
-            // Parent process -> wait for child to finish
-            int status;
-            waitpid(pid, &status, 0);
-        }
+        // Parent process -> wait for child to finish
+        int status;
+        waitpid(pid, &status, 0);
+
     }
     else printError(cmd);
 }
@@ -205,6 +212,8 @@ void shell::runExternalCommand(const std::string& cmd) {
 
 void shell::printError(const std::string& cmd) {
     std::cerr << cmd <<": command not found" << '\n';
+    std::cerr << std::flush;
+
 }
 
 std::string shell::findExternalCommand(const std::string& cmd) {
