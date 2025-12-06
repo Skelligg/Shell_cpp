@@ -194,7 +194,6 @@ void shell::runExternalCommand(const std::string& cmd) {
             }
             argv.push_back(nullptr);
 
-            dup2(STDOUT_FILENO, STDERR_FILENO);
             execvp(cmdFound.c_str(), argv.data());
 
             // If we reach here, exec failed:
