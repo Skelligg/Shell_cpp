@@ -13,17 +13,19 @@ public:
     shell();
     void run();
 private:
-
+    int savedStdOut;
     std::unordered_map<std::string, std::function<void(const std::string&)>> builtInCommands;
 
     std::string parseAction(const std::string&);
 
-    void echoCommand(const std::string&);
-    void typeCommand(const std::string&);
-    void pwdCommand();
-    void cdCommand(const std::string&);
+    int echoCommand(const std::string&);
+    int typeCommand(const std::string&);
+    int pwdCommand();
+    int cdCommand(const std::string&);
     bool exitCommand(const std::string&);
 
+    void outputRedirect(std::string&);
+    void restoreOutput();
     void runExternalCommand(const std::string&);
     void printError(const std::string&);
 

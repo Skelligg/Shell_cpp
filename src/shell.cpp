@@ -8,6 +8,9 @@
 #include <iostream>
 #include <sstream>
 #include <unistd.h>   // fork, execvp
+#include <fcntl.h>      // O_RDONLY, O_WRONLY, O_CREAT, O_TRUNC, etc.
+#include <sys/stat.h>
+
 #include <sys/wait.h> // waitpid
 
 shell::shell() {
@@ -30,6 +33,7 @@ void shell::run() {
         std::getline(std::cin, cmd);
 
         std::string action { parseAction(cmd) };
+        outputRedirect(cmd);
 
         if (exitCommand(cmd)) {
             break;
@@ -41,6 +45,7 @@ void shell::run() {
         } else {
             if (!cmd.empty()) runExternalCommand(cmd);
         }
+        restoreOutput();
 
     }
 }
@@ -49,21 +54,22 @@ std::string shell::parseAction(const std::string& cmd) {
     return cmd.substr(0,cmd.find_first_of(' '));
 }
 
-void shell::echoCommand(const std::string& cmd) {
+int shell::echoCommand(const std::string& cmd) {
     size_t pos = cmd.find_first_of(' ');
     if (pos == std::string::npos) {
         std::cout << '\n';
-        return;
+        return 0;
     }
     std::cout << cmd.substr(pos + 1) << '\n';
+    return 0;
 }
 
-void shell::typeCommand(const std::string& cmd) {
+int shell::typeCommand(const std::string& cmd) {
     size_t pos = cmd.find_first_of(' ');
     if (pos == std::string::npos) {
-        return;
+        return 0;
     }
-    std::string param1 { cmd.substr(pos + 1,cmd.size())};
+    std::string param1 { cmd.substr(pos + 1)};
     if ( builtInCommands.contains(param1)) {
         std::cout << param1 << " is a shell builtin" << '\n';
     }
@@ -71,13 +77,16 @@ void shell::typeCommand(const std::string& cmd) {
     else {
         std::string dirFound {findExternalCommand(param1)};
         if (!dirFound.empty()) std::cout << param1 << " is " << dirFound << '\n';
-        else std::cout << param1 << ": not found" << '\n';
-
+        else std::cerr << param1 << ": not found" << '\n';
+        return 1;
     }
+    return 0;
 }
 
-void shell::pwdCommand() {
+int shell::pwdCommand() {
     std::cout << std::filesystem::current_path().string() << '\n';
+    return 0;
+
     // Below is initial solution using PATH_MAX which is not defined on all systems so failed on codecrafters alpine linux sandbox
     // char buffer[PATH_MAX];
     // if (getcwd(buffer, sizeof(buffer))) {
@@ -85,16 +94,22 @@ void shell::pwdCommand() {
     // }
 }
 
-void shell::cdCommand(const std::string& cmd) {
+int shell::cdCommand(const std::string& cmd) {
     size_t pos = cmd.find_first_of(' ');
     if (pos == std::string::npos) {
-        return;
+        return 0;
     }
-    std::string dir { cmd.substr(pos + 1,cmd.size())};
-    if (dir == "~") dir = getenv("HOME");
+    std::string dir { cmd.substr(pos + 1)};
+    if (dir == "~") {
+        const char* home = getenv("HOME");
+        if (home) dir = home;
+    }
+
     if (chdir(dir.c_str())) {
-        std::cout << "cd: " << dir << ": No such file or directory" << '\n';
+        std::cerr << "cd: " << dir << ": No such file or directory" << '\n';
+        return 1;
     }
+    return 0;
 }
 
 
@@ -112,6 +127,44 @@ bool shell::exitCommand(const std::string& cmd) {
 //
 //     Find custom_exe in PATH
 //     Execute it with three arguments: custom_exe (the program name), arg1, and arg2
+
+void shell::outputRedirect(std::string& cmd) {
+    size_t pos = cmd.find_first_of('>');
+    if (pos == std::string::npos)
+        return;
+
+    savedStdOut = dup(STDOUT_FILENO);
+
+    std::string filename = cmd.substr(pos+1);
+
+    auto start = filename.find_first_not_of(" \t");
+    auto end   = filename.find_last_not_of(" \t");
+    filename = filename.substr(start, end - start + 1);
+
+    if (pos) {
+        if ( cmd[pos-1] != '1' && cmd[pos-1] != '&') {
+            int fd = open(filename.c_str(),
+              O_WRONLY | O_CREAT | O_TRUNC,
+              0644);
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+        }
+        cmd = cmd.substr(0, pos);
+
+        while (!cmd.empty() && std::isspace(cmd.back())) {
+            cmd.pop_back();
+        }
+    }
+
+}
+
+void shell::restoreOutput() {
+    if (savedStdOut != -1) {
+        dup2(savedStdOut, STDOUT_FILENO);
+        close(savedStdOut);
+        savedStdOut = -1;
+    }
+}
 
 void shell::runExternalCommand(const std::string& cmd) {
     std::vector args { split(cmd, ' ')};
@@ -141,7 +194,7 @@ void shell::runExternalCommand(const std::string& cmd) {
 
 
 void shell::printError(const std::string& cmd) {
-    std::cout << cmd <<": command not found" << '\n';
+    std::cerr << cmd <<": command not found" << '\n';
 }
 
 std::string shell::findExternalCommand(const std::string& cmd) {
@@ -156,7 +209,6 @@ std::string shell::findExternalCommand(const std::string& cmd) {
     }
     return "";
 }
-
 
 std::vector<std::string> shell::split(const std::string& str, char delimiter) {
     std::vector<std::string> parts;
