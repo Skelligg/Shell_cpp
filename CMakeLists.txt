@@ -8,6 +8,8 @@ set(CMAKE_CXX_STANDARD 23) # Enable the C++23 standard
 
 add_executable(shell ${SOURCE_FILES}
         src/shell.cpp
-        src/shell.h)
+        src/shell.h
+        src/Autocompleter.cpp
+        src/Autocompleter.h)
 
 target_link_libraries(shell PRIVATE readline)

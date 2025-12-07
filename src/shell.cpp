@@ -13,13 +13,23 @@
 
 #include <sys/wait.h> // waitpid
 
+#include <termios.h>
+
 shell::shell() {
     builtInCommands["echo"] = [this](const std::string& cmd){ echoCommand(cmd); };
     builtInCommands["type"] = [this](const std::string& cmd){ typeCommand(cmd); };
     builtInCommands["cd"] = [this](const std::string& cmd){ cdCommand(cmd); };
     builtInCommands["pwd"] = [this](const std::string& cmd){ pwdCommand(); };
     builtInCommands["exit"] = [this](const std::string& cmd){};
+
+    for (const auto& [cmdName, _ ] : builtInCommands) {
+        autocompleter.addCommand(cmdName);
+    }
 }
+
+struct TermiosGuard {
+	termios origTerm;
+};
 
 void shell::run() {
     std::string cmd;
@@ -122,16 +132,13 @@ bool shell::exitCommand(const std::string& cmd) {
     return cmd == "exit";
 }
 
-// When a command isn't a builtin, your shell should:
-//
-//     Search for an executable with the given name in the directories listed in PATH (just like type does)
-//     If found, execute the program
-//     Pass any arguments from the command line to the program
-//
-// For example, if the user types custom_exe arg1 arg2, your shell should:
-//
-//     Find custom_exe in PATH
-//     Execute it with three arguments: custom_exe (the program name), arg1, and arg2
+void shell::tabAutoComplete(const std::string& cmd) {
+	std::vector<std::string> matches {autocompleter.startsWith(cmd)};
+	if (matches.size() > 1){}
+	else {
+
+	}
+}
 
 void shell::outputRedirect(std::string& cmd) {
     size_t pos = cmd.find_first_of('>');

@@ -8,6 +8,8 @@
 #include <string>
 #include <unordered_map>
 
+#include "Autocompleter.h"
+
 class shell {
 public:
     shell();
@@ -15,6 +17,7 @@ public:
 private:
     int savedStdOut;
     std::unordered_map<std::string, std::function<void(const std::string&)>> builtInCommands;
+    Autocompleter autocompleter{};
 
     std::string parseAction(const std::string&);
 
@@ -24,6 +27,7 @@ private:
     int cdCommand(const std::string&);
     bool exitCommand(const std::string&);
 
+	void tabAutoComplete(const std::string&);
     void outputRedirect(std::string&);
     void restoreOutput();
     void runExternalCommand(const std::string&);

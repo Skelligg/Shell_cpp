@@ -1,0 +1,42 @@
+//
+// Created by Michael Lukyanov on 07/12/2025.
+//
+
+#include "Autocompleter.h"
+
+Autocompleter::Autocompleter() : root {std::make_unique<Node>()}
+{}
+
+void Autocompleter::addCommand(const std::string& cmd) {
+	Node* cur = root.get();
+	for (char c : cmd) {
+		if (!cur->children.contains(c)) {
+			cur->children[c] = std::make_unique<Node>();
+		}
+		cur = cur->children[c].get();
+    }
+    cur->isEnd = true;
+}
+
+std::vector<std::string> Autocompleter::startsWith(const std::string& prefix) {
+	Node* cur = root.get();
+	std::vector<std::string> matches;
+	std::string match;
+	for (char c : prefix) {
+		if (cur->children.count(c)) {
+			cur = cur->children[c].get();
+		}
+	}
+	Node* base = cur;
+	for (const auto& pair : base->children) {
+		cur = base;
+		match = prefix;
+		while (true) {
+			cur = cur->children[pair.first].get();
+			match.push_back(pair.first);
+			if (cur->isEnd) break;
+		}
+		matches.push_back(match);
+	}
+	return matches;
+}
