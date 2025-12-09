@@ -160,7 +160,7 @@ void shell::handleInput(std::string& cmd) {
 			}
 			else if (!matches.empty()) {
 				cmd = matches[0];
-				std::cout << "\r\033[K$ " << cmd << std::flush;
+				std::cout << "\r\033[K$ " << cmd << ' ' << std::flush;
 
 			}
 		} else if (ch == '\n') {
