@@ -36,7 +36,8 @@ std::vector<std::string> Autocompleter::startsWith(const std::string& prefix) {
 		cur = cur->children[pair.first].get();
 		match.push_back(pair.first);
 		while (cur && !cur->isEnd) {
-			auto it = cur->children.begin();
+			if (cur->children.empty()) break;
+			auto it = cur->children.begin(); //ask about this, in order to traverse a map, you use an iterator?
 			match.push_back(it->first);      // the character
 			cur = it->second.get();
 		}

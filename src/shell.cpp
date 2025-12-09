@@ -164,6 +164,9 @@ void shell::handleInput(std::string& cmd) {
 				std::cout << "\r\033[K$ " << cmd << std::flush;
 
 			}
+			else {
+				std::cout << "\x07" << std::flush;
+			}
 		} else if (ch == '\n') {
 			std::cout << '\n';
 			break;  // finish input
