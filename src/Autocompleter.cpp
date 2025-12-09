@@ -29,6 +29,7 @@ std::vector<std::string> Autocompleter::startsWith(const std::string& prefix) {
 			cur = cur->children[c].get();
 		}
 	}
+	if (cur == root.get()) return matches;
 	Node* base = cur;
 	for (const auto& pair : base->children) {
 		cur = base;
