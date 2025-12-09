@@ -29,16 +29,30 @@ shell::shell() {
 
 struct TermiosGuard {
 	termios origTerm;
+
+	TermiosGuard() {
+		tcgetattr(STDIN_FILENO, &origTerm); //save original settings
+		termios raw = origTerm;
+		raw.c_lflag &= ~(ICANON | ECHO); // disable canonical mode & echo
+		tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+	}
+
+	~TermiosGuard() {
+		tcsetattr(STDIN_FILENO, TCSANOW ,&origTerm); // restore on destruction
+	}
 };
 
 void shell::run() {
+	TermiosGuard guard;
+
     std::string cmd;
 
     while (true) {
 
-        std::cout << "$ ";
+        std::cout << "$ " << std::flush;
+    	cmd.clear();
 
-        std::getline(std::cin, cmd);
+        handleInput(cmd);
 
         std::string action { parseAction(cmd) };
         outputRedirect(cmd);
@@ -132,10 +146,35 @@ bool shell::exitCommand(const std::string& cmd) {
     return cmd == "exit";
 }
 
-void shell::tabAutoComplete(const std::string& cmd) {
-	std::vector<std::string> matches {autocompleter.startsWith(cmd)};
-	if (matches.size() > 1){}
-	else {
+void shell::handleInput(std::string& cmd) {
+	char ch;
+	while (read(STDIN_FILENO, &ch, 1) == 1) {
+		if (ch == '\t') {
+			std::vector<std::string> matches = autocompleter.startsWith(cmd);
+			if (matches.size() > 1) {
+				std::cout << '\n';
+				for (auto& match : matches) {
+					std::cout << match << ' ';
+				}
+				std::cout << '\n' << "$ " << cmd << std::flush;
+			}
+			else if (!matches.empty()) {
+				cmd = matches[0];
+				std::cout << "\r\033[K$ " << cmd << std::flush;
+
+			}
+		} else if (ch == '\n') {
+			std::cout << '\n';
+			break;  // finish input
+		} else if (ch == 127 || ch == 8) {
+			if (!cmd.empty()) {
+				cmd.pop_back();
+				std::cout << "\b \b" << std::flush;
+			}
+		} else {
+			cmd.push_back(ch);
+			std::cout << ch << std::flush;
+		}
 
 	}
 }

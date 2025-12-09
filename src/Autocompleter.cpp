@@ -4,6 +4,8 @@
 
 #include "Autocompleter.h"
 
+#include <iostream>
+
 Autocompleter::Autocompleter() : root {std::make_unique<Node>()}
 {}
 
@@ -31,10 +33,12 @@ std::vector<std::string> Autocompleter::startsWith(const std::string& prefix) {
 	for (const auto& pair : base->children) {
 		cur = base;
 		match = prefix;
-		while (true) {
-			cur = cur->children[pair.first].get();
-			match.push_back(pair.first);
-			if (cur->isEnd) break;
+		cur = cur->children[pair.first].get();
+		match.push_back(pair.first);
+		while (cur && !cur->isEnd) {
+			auto it = cur->children.begin();
+			match.push_back(it->first);      // the character
+			cur = it->second.get();
 		}
 		matches.push_back(match);
 	}

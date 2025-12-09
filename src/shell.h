@@ -27,9 +27,10 @@ private:
     int cdCommand(const std::string&);
     bool exitCommand(const std::string&);
 
-	void tabAutoComplete(const std::string&);
+	void handleInput(std::string&);
     void outputRedirect(std::string&);
     void restoreOutput();
+
     void runExternalCommand(const std::string&);
     void printError(const std::string&);
 
