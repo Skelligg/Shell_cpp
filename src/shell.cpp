@@ -10,6 +10,8 @@
 #include <unistd.h>   // fork, execvp
 #include <fcntl.h>      // O_RDONLY, O_WRONLY, O_CREAT, O_TRUNC, etc.
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 #include <sys/wait.h> // waitpid
 
@@ -25,6 +27,11 @@ shell::shell() {
     for (const auto& [cmdName, _ ] : builtInCommands) {
         autocompleter.addCommand(cmdName);
     }
+
+	std::vector externalCmds {findAllExternalCommands()};
+	for (const auto& cmd : externalCmds) {
+		autocompleter.addCommand(cmd);
+	}
 }
 
 struct TermiosGuard {
@@ -168,6 +175,9 @@ void shell::handleInput(std::string& cmd) {
 				std::cout << "\x07" << std::flush;
 			}
 		} else if (ch == '\n') {
+			while (!cmd.empty() && std::isspace(cmd.back())) {
+				cmd.pop_back();
+			}
 			std::cout << '\n';
 			break;  // finish input
 		} else if (ch == 127 || ch == 8) {
@@ -290,6 +300,44 @@ void shell::printError(const std::string& cmd) {
     std::cerr << std::flush;
 
 }
+
+bool shell::is_executable(const std::string& path) {
+	struct stat st;
+	if (stat(path.c_str(), &st) != 0) {
+		return false;
+	}
+	// Check if it's a regular file and executable by user/group/others
+	return S_ISREG(st.st_mode) && (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH));
+}
+
+std::vector<std::string> shell::findAllExternalCommands() {
+	std::vector<std::string> results;
+	const char* raw = std::getenv("PATH");
+	if (!raw) return {};
+	std::string pathVar{ raw };
+	std::vector pathDirs { split(pathVar,':')};
+
+	for (std::string& pathDir : pathDirs) {
+		auto* dirStream {opendir(pathDir.c_str())};
+		if (!dirStream) {
+			continue;
+		}
+		while (true) {
+			auto* dir {readdir(dirStream)};
+			if (dir == nullptr) break;
+			std::string name {dir->d_name};
+			if (name == "." || name == "..") continue;
+
+			std::string fullName {pathDir + "/" + name};
+			if (is_executable(fullName)) {
+				results.push_back(name);
+			}
+		}
+		closedir(dirStream);
+	}
+	return results;
+}
+
 
 std::string shell::findExternalCommand(const std::string& cmd) {
     std::string pathVar { std::getenv("PATH") };

@@ -34,6 +34,8 @@ private:
     void runExternalCommand(const std::string&);
     void printError(const std::string&);
 
+	bool is_executable(const std::string& path);
+	std::vector<std::string> findAllExternalCommands();
     std::string findExternalCommand(const std::string& cmd);
     std::vector<std::string> split(const std::string& str, char delimiter);
 };
