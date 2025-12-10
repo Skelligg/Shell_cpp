@@ -168,6 +168,7 @@ void shell::handleInput(std::string& cmd) {
 					std::cout << '\n' << std::flush;
 					for (auto& match : matches) {
 						std::cout << match << "	 ";
+						std::cout << std::flush;
 					}
 					std::cout << '\n' << "$ " << cmd << std::flush;
 					tabCount = 0;
@@ -177,7 +178,6 @@ void shell::handleInput(std::string& cmd) {
 				cmd = matches[0];
 				cmd.push_back(' ');
 				std::cout << "\r\033[K$ " << cmd << std::flush;
-
 			}
 			else {
 				std::cout << "\x07" << std::flush;
