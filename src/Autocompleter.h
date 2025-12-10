@@ -22,6 +22,7 @@ private:
         std::unordered_map<char, std::unique_ptr<Node>> children;
     };
     std::unique_ptr<Node> root;
+	void dfs(Node* node, std::string current, std::vector<std::string>& results);
 
 };
 

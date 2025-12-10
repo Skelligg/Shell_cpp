@@ -23,26 +23,25 @@ void Autocompleter::addCommand(const std::string& cmd) {
 std::vector<std::string> Autocompleter::startsWith(const std::string& prefix) {
 	Node* cur = root.get();
 	std::vector<std::string> matches;
-	std::string match;
+	std::string potentialMatch;
 	for (char c : prefix) {
 		if (cur->children.count(c)) {
 			cur = cur->children[c].get();
 		}
+		else return matches;
 	}
-	if (cur == root.get()) return matches;
-	Node* base = cur;
-	for (const auto& pair : base->children) {
-		cur = base;
-		match = prefix;
-		cur = cur->children[pair.first].get();
-		match.push_back(pair.first);
-		while (cur && !cur->isEnd) {
-			if (cur->children.empty()) break;
-			auto it = cur->children.begin(); //ask about this, in order to traverse a map, you use an iterator?
-			match.push_back(it->first);      // the character
-			cur = it->second.get();
-		}
-		matches.push_back(match);
-	}
+
+	dfs(cur, prefix, matches);
+
 	return matches;
+}
+
+// Depth-First Search, a standard tree/graph traversal algorithm.
+void Autocompleter::dfs(Node* node, std::string current, std::vector<std::string>& results) {
+	if (node->isEnd) {
+		results.push_back(current);
+	}
+	for (auto& [ch, child] : node->children) {
+		dfs(child.get(), current + ch, results);
+	}
 }
