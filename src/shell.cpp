@@ -52,7 +52,7 @@ struct TermiosGuard {
 void shell::run() {
 	TermiosGuard guard;
 
-    std::string cmd;
+    std::string cmd{};
 
     while (true) {
 
@@ -155,15 +155,23 @@ bool shell::exitCommand(const std::string& cmd) {
 
 void shell::handleInput(std::string& cmd) {
 	char ch;
+	int tabCount {0};
 	while (read(STDIN_FILENO, &ch, 1) == 1) {
 		if (ch == '\t') {
 			std::vector<std::string> matches = autocompleter.startsWith(cmd);
 			if (matches.size() > 1) {
-				std::cout << '\n';
-				for (auto& match : matches) {
-					std::cout << match << ' ';
+				++tabCount;
+				if (tabCount == 1) {
+					std::cout << "\x07" << std::flush;
 				}
-				std::cout << '\n' << "$ " << cmd << std::flush;
+				if (tabCount == 2) {
+					std::cout << '\n';
+					for (auto& match : matches) {
+						std::cout << match << "	 ";
+					}
+					std::cout << '\n' << "$ " << cmd << std::flush;
+					tabCount = 0;
+				}
 			}
 			else if (!matches.empty()) {
 				cmd = matches[0];
