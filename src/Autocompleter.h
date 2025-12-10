@@ -4,9 +4,9 @@
 
 #ifndef SHELL_STARTER_CPP_AUTOCOMPLETER_H
 #define SHELL_STARTER_CPP_AUTOCOMPLETER_H
+#include <map>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 
@@ -19,7 +19,7 @@ public:
 private:
     struct Node {
         bool isEnd {false};
-        std::unordered_map<char, std::unique_ptr<Node>> children;
+        std::map<char, std::unique_ptr<Node>> children;
     };
     std::unique_ptr<Node> root;
 	void dfs(Node* node, std::string current, std::vector<std::string>& results);

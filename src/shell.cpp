@@ -165,7 +165,7 @@ void shell::handleInput(std::string& cmd) {
 					std::cout << "\x07" << std::flush;
 				}
 				if (tabCount == 2) {
-					std::cout << '\n';
+					std::cout << '\n' << std::flush;
 					for (auto& match : matches) {
 						std::cout << match << "	 ";
 					}
