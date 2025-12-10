@@ -167,7 +167,7 @@ void shell::handleInput(std::string& cmd) {
 				if (tabCount == 2) {
 					std::cout << '\n' << std::flush;
 					for (auto& match : matches) {
-						std::cout << match << "	 ";
+						std::cout << match << "  ";
 						std::cout << std::flush;
 					}
 					std::cout << '\n' << "$ " << cmd << std::flush;
