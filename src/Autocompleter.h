@@ -15,6 +15,7 @@ public:
     Autocompleter();
     void addCommand(const std::string& cmd);
 	std::vector<std::string> startsWith(const std::string& prefix);
+	std::string longestCommonPrefix(const std::string& prefix);
 
 private:
     struct Node {

@@ -2,7 +2,7 @@
 // Created by Michael Lukyanov on 27/11/2025.
 //
 
-#include "shell.h"
+#include "Shell.h"
 
 #include <filesystem>
 #include <iostream>
@@ -17,7 +17,7 @@
 
 #include <termios.h>
 
-shell::shell() {
+Shell::Shell() {
     builtInCommands["echo"] = [this](const std::string& cmd){ echoCommand(cmd); };
     builtInCommands["type"] = [this](const std::string& cmd){ typeCommand(cmd); };
     builtInCommands["cd"] = [this](const std::string& cmd){ cdCommand(cmd); };
@@ -49,7 +49,7 @@ struct TermiosGuard {
 	}
 };
 
-void shell::run() {
+void Shell::run() {
 	TermiosGuard guard;
 
     std::string cmd{};
@@ -80,11 +80,11 @@ void shell::run() {
     }
 }
 
-std::string shell::parseAction(const std::string& cmd) {
+std::string Shell::parseAction(const std::string& cmd) {
     return cmd.substr(0,cmd.find_first_of(' '));
 }
 
-int shell::echoCommand(const std::string& cmd) {
+int Shell::echoCommand(const std::string& cmd) {
     size_t pos = cmd.find_first_of(' ');
     if (pos == std::string::npos) {
         std::cout << '\n';
@@ -100,7 +100,7 @@ int shell::echoCommand(const std::string& cmd) {
     return 0;
 }
 
-int shell::typeCommand(const std::string& cmd) {
+int Shell::typeCommand(const std::string& cmd) {
     size_t pos = cmd.find_first_of(' ');
     if (pos == std::string::npos) {
         return 0;
@@ -119,7 +119,7 @@ int shell::typeCommand(const std::string& cmd) {
     return 0;
 }
 
-int shell::pwdCommand() {
+int Shell::pwdCommand() {
     std::cout << std::filesystem::current_path().string() << '\n';
     return 0;
 
@@ -130,7 +130,7 @@ int shell::pwdCommand() {
     // }
 }
 
-int shell::cdCommand(const std::string& cmd) {
+int Shell::cdCommand(const std::string& cmd) {
     size_t pos = cmd.find_first_of(' ');
     if (pos == std::string::npos) {
         return 0;
@@ -149,11 +149,11 @@ int shell::cdCommand(const std::string& cmd) {
 }
 
 
-bool shell::exitCommand(const std::string& cmd) {
+bool Shell::exitCommand(const std::string& cmd) {
     return cmd == "exit";
 }
 
-void shell::handleInput(std::string& cmd) {
+void Shell::handleInput(std::string& cmd) {
 	char ch;
 	int tabCount {0};
 	while (read(STDIN_FILENO, &ch, 1) == 1) {
@@ -162,13 +162,18 @@ void shell::handleInput(std::string& cmd) {
 			if (matches.size() > 1) {
 				++tabCount;
 				if (tabCount == 1) {
-					std::cout << "\x07" << std::flush;
+					std::string match = autocompleter.longestCommonPrefix(cmd);
+					if (!match.empty()) {
+						cmd = match;
+						std::cout << "\r\033[K$ " << cmd << std::flush;
+					}
+					else std::cout << "\x07" << std::flush;
+
 				}
 				if (tabCount == 2) {
-					std::cout << '\n' << std::flush;
+					std::cout << '\n';
 					for (auto& match : matches) {
 						std::cout << match << "  ";
-						std::cout << std::flush;
 					}
 					std::cout << '\n' << "$ " << cmd << std::flush;
 					tabCount = 0;
@@ -196,12 +201,13 @@ void shell::handleInput(std::string& cmd) {
 		} else {
 			cmd.push_back(ch);
 			std::cout << ch << std::flush;
+			tabCount = 0;
 		}
 
 	}
 }
 
-void shell::outputRedirect(std::string& cmd) {
+void Shell::outputRedirect(std::string& cmd) {
     size_t pos = cmd.find_first_of('>');
     if (pos == std::string::npos)
         return;
@@ -268,7 +274,7 @@ void shell::outputRedirect(std::string& cmd) {
 
 }
 
-void shell::restoreOutput() {
+void Shell::restoreOutput() {
     if (savedStdOut != -1) {
         dup2(savedStdOut, STDOUT_FILENO);
         close(savedStdOut);
@@ -276,7 +282,7 @@ void shell::restoreOutput() {
     }
 }
 
-void shell::runExternalCommand(const std::string& cmd) {
+void Shell::runExternalCommand(const std::string& cmd) {
     std::vector args { split(cmd, ' ')};
     std::string cmdFound {findExternalCommand(args[0])};
     if (!cmdFound.empty()) {
@@ -303,13 +309,13 @@ void shell::runExternalCommand(const std::string& cmd) {
 }
 
 
-void shell::printError(const std::string& cmd) {
+void Shell::printError(const std::string& cmd) {
     std::cerr << cmd <<": command not found" << '\n';
     std::cerr << std::flush;
 
 }
 
-bool shell::is_executable(const std::string& path) {
+bool Shell::is_executable(const std::string& path) {
 	struct stat st;
 	if (stat(path.c_str(), &st) != 0) {
 		return false;
@@ -318,7 +324,7 @@ bool shell::is_executable(const std::string& path) {
 	return S_ISREG(st.st_mode) && (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH));
 }
 
-std::vector<std::string> shell::findAllExternalCommands() {
+std::vector<std::string> Shell::findAllExternalCommands() {
 	std::vector<std::string> results;
 	const char* raw = std::getenv("PATH");
 	if (!raw) return {};
@@ -347,7 +353,7 @@ std::vector<std::string> shell::findAllExternalCommands() {
 }
 
 
-std::string shell::findExternalCommand(const std::string& cmd) {
+std::string Shell::findExternalCommand(const std::string& cmd) {
     std::string pathVar { std::getenv("PATH") };
     std::vector pathDirs { split(pathVar,':')};
 
@@ -360,7 +366,7 @@ std::string shell::findExternalCommand(const std::string& cmd) {
     return "";
 }
 
-std::vector<std::string> shell::split(const std::string& str, char delimiter) {
+std::vector<std::string> Shell::split(const std::string& str, char delimiter) {
     std::vector<std::string> parts;
     std::stringstream ss(str);
     std::string item;

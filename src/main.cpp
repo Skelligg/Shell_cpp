@@ -1,6 +1,6 @@
-#include "shell.h"
+#include "Shell.h"
 
 int main() {
-    shell sh = shell();
+    Shell sh = Shell();
     sh.run();
 }

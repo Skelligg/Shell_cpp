@@ -10,9 +10,9 @@
 
 #include "Autocompleter.h"
 
-class shell {
+class Shell {
 public:
-    shell();
+    Shell();
     void run();
 private:
     int savedStdOut;

@@ -20,6 +20,24 @@ void Autocompleter::addCommand(const std::string& cmd) {
     cur->isEnd = true;
 }
 
+std::string Autocompleter::longestCommonPrefix(const std::string& prefix) {
+	Node* cur = root.get();
+	std::string commonSuffix {};
+	for (char c : prefix) {
+		if (cur->children.count(c)) {
+			cur = cur->children[c].get();
+		}
+	}
+
+	while (!cur->isEnd && cur->children.size() == 1) {
+		commonSuffix.push_back(cur->children.begin()->first);
+		cur = cur->children.begin()->second.get();
+	}
+
+	return (prefix + commonSuffix);
+}
+
+
 std::vector<std::string> Autocompleter::startsWith(const std::string& prefix) {
 	Node* cur = root.get();
 	std::vector<std::string> matches;
