@@ -163,6 +163,8 @@ void Shell::handleInput(std::string& cmd) {
 				++tabCount;
 				if (tabCount == 1) {
 					std::string match = autocompleter.longestCommonPrefix(cmd);
+					std::cout << "\x07" << std::flush;
+
 					if (!match.empty()) {
 						cmd = match;
 						std::cout << "\r\033[K$ " << cmd << std::flush;
