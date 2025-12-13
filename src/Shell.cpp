@@ -61,22 +61,34 @@ void Shell::run() {
 
         handleInput(cmd);
 
-        std::string action { parseAction(cmd) };
-        outputRedirect(cmd);
+    	std::vector<std::string> cmds {checkForPipeline(cmd)};
 
-        if (exitCommand(cmd)) {
-            break;
-        }
+    	if (!cmds.empty()) {
+    		for (std::string& option : cmds) {
+			std::cout << option << '\n';
+    		}
 
-        auto it = builtInCommands.find(action);
-        if (it != builtInCommands.end()) {
-            it->second(cmd);
-        } else {
-            if (!cmd.empty()) runExternalCommand(cmd);
-        }
-        restoreOutput();
-        std::cout << std::flush;
-        std::cerr << std::flush;
+    	} else {
+    		std::string action { parseAction(cmd) };
+    		outputRedirect(cmd);
+
+    		if (exitCommand(cmd)) {
+    			break;
+    		}
+
+    		auto it = builtInCommands.find(action);
+    		if (it != builtInCommands.end()) {
+    			it->second(cmd);
+    		} else {
+    			if (!cmd.empty()) runExternalCommand(cmd);
+    		}
+    		restoreOutput();
+    		std::cout << std::flush;
+    		std::cerr << std::flush;
+    	}
+    	std::cout << std::flush;
+    	std::cerr << std::flush;
+
     }
 }
 
@@ -282,6 +294,41 @@ void Shell::restoreOutput() {
         close(savedStdOut);
         savedStdOut = -1;
     }
+}
+
+std::vector<std::string> Shell::checkForPipeline(std::string cmd) {
+	std::vector<std::string> cmds;
+	size_t pos = cmd.find_first_of('|');
+	if (pos == std::string::npos)
+		return {};
+
+	std::string pipeCmd;
+	while (pos != std::string::npos || !cmd.empty()) {
+		if (pos != std::string::npos) {
+			pipeCmd = cmd.substr(0,pos);
+		} else {
+			pipeCmd = cmd;
+		}
+
+		while (!pipeCmd.empty() && std::isspace(pipeCmd.back())) {
+			pipeCmd.pop_back();
+		}
+
+		while (!pipeCmd.empty() && std::isspace(pipeCmd.front())) {
+			pipeCmd.erase(0,1);
+		}
+
+		cmds.push_back(pipeCmd);
+		if (pos != std::string::npos) {
+			cmd.erase(0, pos+1);
+		} else {
+			cmd.erase();
+		}
+		pos = cmd.find_first_of('|');
+
+	}
+
+	return cmds;
 }
 
 void Shell::runExternalCommand(const std::string& cmd) {

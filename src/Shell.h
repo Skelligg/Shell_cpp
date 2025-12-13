@@ -31,6 +31,7 @@ private:
     void outputRedirect(std::string&);
     void restoreOutput();
 
+	std::vector<std::string> checkForPipeline(std::string);
     void runExternalCommand(const std::string&);
     void printError(const std::string&);
 
